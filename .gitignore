@@ -20,3 +20,7 @@ Thumbs.db
 
 # 기타
 *.log
+
+# 데이터베이스
+*.db
+notes.db
