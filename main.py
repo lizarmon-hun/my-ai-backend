@@ -4,8 +4,7 @@ from typing import List
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
-
-
+import requests
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./notes.db"    #데이터베이스 설정
 engine = create_engine(
@@ -96,9 +95,37 @@ def delete_note(note_id: int, db: Session = Depends(get_db)):
 def ask_question(q: Question, db: Session = Depends(get_db)):
     notes = db.query(NoteDB).all()  #저장된 노트를 전부 불러온다
     context = "\n".join([f"제목: {n.title}\n내용: {n.content}"for n in notes])  #노트의 내용을 하나의 문자열로 합치기
-    fake_answer = f"질문: {q.question} \n\n관련 노트 요약: {context[:500]}..."
+
+    if len(context) > 2000:
+        context = context[:2000] + "..."    #컨텍스트가 너무 길면 자르기
+
+    prompt = f"""당신은 사용자의 노트를 바탕으로 답변하는 도우미입니다.
+아래 노트 내용을 참고해서 질문에 답변해 주세요.
+
+노트 내용:
+{context}
+
+질문: {q.question}
+
+답변:"""
+
+    # Ollama API 호출
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "llama2.5:latest",  # 다운로드한 모델 이름으로 바꾸세요
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+
+    if response.status_code == 200:
+        answer = response.json().get("response", "응답을 생성하지 못했습니다.")
+    else:
+        answer = "Ollama 연결에 실패했습니다. Ollama가 실행 중인지 확인하세요."
+
     return {
         "question": q.question,
-        "answer": fake_answer,
+        "answer": answer,
         "note_count": len(notes)
     }
