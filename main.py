@@ -99,8 +99,12 @@ def ask_question(q: Question, db: Session = Depends(get_db)):
     if len(context) > 2000:
         context = context[:2000] + "..."    #컨텍스트가 너무 길면 자르기
 
-    prompt = f"""당신은 사용자의 노트를 바탕으로 답변하는 도우미입니다.
-아래 노트 내용을 참고해서 질문에 답변해 주세요.
+    prompt = f"""당신은 사용자의 개인 노트를 기반으로 정확하게 답변하는 도우미입니다.
+아래 규칙을 반드시 지켜주세요:
+- 오직 제공된 노트 내용만을 바탕으로 답변하세요.
+- 노트에 없는 내용은 추측하지 마세요.
+- 관련 내용이 없으면 "노트에서 관련 정보를 찾을 수 없습니다"라고 답하세요.
+- 답변은 간결하고 명확하게 작성하세요.
 
 노트 내용:
 {context}
@@ -113,7 +117,7 @@ def ask_question(q: Question, db: Session = Depends(get_db)):
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={
-            "model": "llama2.5:latest",  # 다운로드한 모델 이름으로 바꾸세요
+            "model": "qwen2.5:latest",  # 다운로드한 모델 이름으로 바꾸세요
             "prompt": prompt,
             "stream": False
         }
