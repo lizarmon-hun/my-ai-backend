@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>노트 관리</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        input, textarea { width: 100%; margin: 8px 0; padding: 8px; }
+        button { padding: 10px 16px; margin: 5px 0; }
+        .note { border: 1px solid #ddd; padding: 12px; margin: 10px 0; border-radius: 6px; }
+        a { color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <a href="/">← 홈으로</a>
+    <h1>노트 관리</h1>
+
+    <h3>새 노트 추가</h3>
+    <input type="text" id="title" placeholder="제목">
+    <textarea id="content" placeholder="내용" rows="4"></textarea>
+    <button onclick="createNote()">추가</button>
+
+    <h3>노트 목록</h3>
+    <div id="notes"></div>
+    
+    <script>
+        async function loadNotes() {
+            const res = await fetch("/notes");
+            const notes = await res.json();
+            const container = document.getElementById("notes");
+            container.innerHTML = "";
+
+            notes.forEach(note => {
+                container.innerHTML += `
+                    <div class="note" id="note-${note.id}">
+                        <div id="view-${note.id}">
+                            <strong>${note.title}</strong> (ID: ${note.id})<br>
+                            <span>${note.content}</span>
+                        </div>
+                        <br><button onclick="editNote(${note.id}, '${note.title}', '${note.content}')">수정</button>
+                        <button onclick="deleteNote(${note.id})">삭제</button>
+                        
+                    </div>
+                `;
+            });
+        }
+
+        async function createNote() {
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+            if (!title || !content) return alert("제목과 내용을 입력하세요");
+
+            await fetch("/notes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content })
+            });
+
+            document.getElementById("title").value = "";
+            document.getElementById("content").value = "";
+            loadNotes();
+        }
+
+        async function updateNote(){
+
+        }
+
+        async function deleteNote(id) {
+            if (!confirm("정말 삭제할까요?")) return;
+            await fetch(`/notes/${id}`, { method: "DELETE" });
+            loadNotes();
+        }
+
+        loadNotes();
+    </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException ,Depends
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy import create_engine, Column, Integer, String
@@ -44,9 +46,20 @@ def get_db():
 class Question(BaseModel):   #질문 요청 모델
     question: str
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return {"message": "Hello, FastAPI! 데이터베이스 버전입니다."}
+    with open("templates/index.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/ask-page", response_class=HTMLResponse)
+def ask_page():
+    with open("templates/ask.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/notes-page", response_class=HTMLResponse)
+def notes_page():
+    with open("templates/notes.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 @app.get("/health")
 def health_check():
@@ -104,7 +117,7 @@ def ask_question(q: Question, db: Session = Depends(get_db)):
 - 오직 제공된 노트 내용만을 바탕으로 답변하세요.
 - 노트에 없는 내용은 추측하지 마세요.
 - 관련 내용이 없으면 "노트에서 관련 정보를 찾을 수 없습니다"라고 답하세요.
-- 답변은 간결하고 명확하게 작성하세요.
+- 답변은 간결하고 명확하게 한국어로 작성하세요.
 
 노트 내용:
 {context}
