@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="stylesheet" href="/static/style.css">
     <meta charset="UTF-8">
     <title>노트 관리</title>
     <style>
@@ -36,13 +37,42 @@
                         <div id="view-${note.id}">
                             <strong>${note.title}</strong> (ID: ${note.id})<br>
                             <span>${note.content}</span>
+                            <br>
+                            <button onclick="startEdit(${note.id})">수정</button>
+                            <button onclick="deleteNote(${note.id})">삭제</button>
                         </div>
-                        <br><button onclick="editNote(${note.id}, '${note.title}', '${note.content}')">수정</button>
-                        <button onclick="deleteNote(${note.id})">삭제</button>
-                        
+                        <div id="edit-${note.id}" style="display:none;">
+                            <input type="text" id="title-${note.id}" value="${note.title}"><br>
+                            <textarea id="content-${note.id}" rows="3">${note.content}</textarea><br>
+                            <button onclick="saveEdit(${note.id})">저장</button>
+                            <button onclick="cancelEdit(${note.id})">취소</button>
+                        </div>
                     </div>
                 `;
             });
+        }
+
+        function startEdit(id) {
+            document.getElementById(`view-${id}`).style.display = "none";
+            document.getElementById(`edit-${id}`).style.display = "block";
+        }   
+
+        function cancelEdit(id) {
+            document.getElementById(`view-${id}`).style.display = "block";
+            document.getElementById(`edit-${id}`).style.display = "none";
+        }
+
+        async function saveEdit(id) {
+            const title = document.getElementById(`title-${id}`).value;
+            const content = document.getElementById(`content-${id}`).value;
+
+            await fetch(`/notes/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content })
+            });
+
+            loadNotes();
         }
 
         async function createNote() {
@@ -59,10 +89,6 @@
             document.getElementById("title").value = "";
             document.getElementById("content").value = "";
             loadNotes();
-        }
-
-        async function updateNote(){
-
         }
 
         async function deleteNote(id) {

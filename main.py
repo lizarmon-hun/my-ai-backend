@@ -16,6 +16,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 app = FastAPI()
 Base = declarative_base()   #모델 기본 틀 정의
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 class NoteDB(Base):         #Base를 상속받아 데이터베이스 모델 정의
     __tablename__ = "notes"
     id = Column(Integer, primary_key=True, index=True)
