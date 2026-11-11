@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 import requests
+from datetime import datetime
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./notes.db"    #데이터베이스 설정
 engine = create_engine(
@@ -23,6 +24,13 @@ class NoteDB(Base):         #Base를 상속받아 데이터베이스 모델 정�
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     content = Column(String)
+
+class QARecord(Base):
+    __tablename__ = "qa_records"
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(String)
+    answer = Column(String)
+    created_at = Column(String)  # 간단하게 문자열로 저장
 
 Base.metadata.create_all(bind=engine)   #테이블 생성
 
@@ -143,8 +151,30 @@ def ask_question(q: Question, db: Session = Depends(get_db)):
     else:
         answer = "Ollama 연결에 실패했습니다. Ollama가 실행 중인지 확인하세요."
 
+    # 기록 저장
+    record = QARecord(
+        question=q.question,
+        answer=answer,
+        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    db.add(record)
+    db.commit()
+
     return {
         "question": q.question,
         "answer": answer,
         "note_count": len(notes)
     }
+
+@app.get("/qa-records")
+def get_qa_records(db: Session = Depends(get_db)):
+    records = db.query(QARecord).order_by(QARecord.id.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "question": r.question,
+            "answer": r.answer,
+            "created_at": r.created_at
+        }
+        for r in records
+    ]
