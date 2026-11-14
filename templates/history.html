@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>질문 기록</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .record {
+            background: white;
+            border: 1px solid #eee;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+        .question { font-weight: bold; color: #2c3e50; }
+        .answer { margin-top: 8px; white-space: pre-wrap; }
+        .time { font-size: 0.85em; color: #888; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <a href="/">← 홈으로</a>
+    <h1>질문 기록</h1>
+    <div id="records">불러오는 중...</div>
+
+    <script>
+        async function loadRecords() {
+            const res = await fetch("/qa-records");
+            const records = await res.json();
+            const container = document.getElementById("records");
+
+            if (records.length === 0) {
+                container.innerHTML = "<p>아직 질문 기록이 없습니다.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+            records.forEach(r => {
+                container.innerHTML += `
+                    <div class="record">
+                        <div class="question">Q: ${r.question}</div>
+                        <div class="answer">A: ${r.answer}</div>
+                        <div class="time">${r.created_at}</div>
+                    </div>
+                `;
+            });
+        }
+
+        loadRecords();
+    </script>
+</body>
+</html>

@@ -71,6 +71,11 @@ def notes_page():
     with open("templates/notes.html", "r", encoding="utf-8") as f:
         return f.read()
 
+@app.get("/history", response_class=HTMLResponse)
+def history_page():
+    with open("templates/history.html", "r", encoding="utf-8") as f:
+        return f.read()
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
